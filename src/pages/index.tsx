@@ -1,11 +1,62 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
+import { useState, useMemo } from 'react'
+import MaterialReactTable from 'material-react-table';
+import type { MRT_ColumnDef } from 'material-react-table';
+//Components
+import { TableSelector } from '@/components/TableSelector'
+//Icons
+import {IoNewspaperSharp} from 'react-icons/io5'
+import {AiFillCar} from 'react-icons/ai'
+import {MdBadge} from 'react-icons/md'
+import {FaUser} from 'react-icons/fa'
 
-const inter = Inter({ subsets: ['latin'] })
+interface HomeProps {
+  data: any
+}
+export default function Home({
+  data
+}: HomeProps) {
+  const [tables, setTables] = useState([
+    {
+      name: 'infracciones',
+      icon: <IoNewspaperSharp color='#4b5563' size={20}/>,
+      selected: true
+    },
+    {
+      name: 'vehiculos',
+      icon: <AiFillCar color='#4b5563' size={20}/>,
+      selected: false
+    },
+    {
+      name: 'matriculas',
+      icon: <MdBadge color='#4b5563' size={20}/>,
+      selected: false
+    },
+    {
+      name: 'propietarios',
+      icon: <FaUser color='#4b5563' size={20}/>,
+      selected: false
+    }
+  ])
 
-export default function Home() {
+  const [tableData, setTableData] = useState(data)
+
+  const columns = useMemo(
+    () => {
+      const firstRow = tableData[0]
+      const columns: MRT_ColumnDef[] = []
+      for (const key in firstRow) {
+        columns.push({
+          accessorKey: key,
+          header: key,
+        })
+      }
+      return columns
+    },
+    [tableData]
+  );
+
+  console.log(data)
   return (
     <>
       <Head>
@@ -14,110 +65,52 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>src/pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
+      <main className='p-5'>
+        <h1 className="text-2xl font-bold text-center text-gray-600">Selecciona una tabla</h1>
+        <div className="tableButtons flex flex-wrap justify-center">
+          {
+            tables.map((table) => (
+              <TableSelector
+                key={table.name}
+                title={table.name}
+                icon={table.icon}
+                onClick={() => console.log(table.name)} 
+                selected={table.selected}
               />
-            </a>
-          </div>
+            ))
+          }
         </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
+        <div className="table w-full overflow-x-scroll">
+          <MaterialReactTable
+            columns={columns}
+            data={tableData}
+            muiTableContainerProps={{
+              sx: { maxHeight: '600px', maxWidth: '90vw' }, //give the table a max height
+            }}
           />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
         </div>
       </main>
     </>
   )
+}
+
+//Get server side props
+export async function getServerSideProps() {
+  try {
+    const url = 'https://crud-transito-backend.vercel.app'
+    const res = await fetch(`${url}/api/infraccion`)
+    const data = await res.json()
+    return {
+      props: {
+        data
+      }
+    }
+  } catch (error) {
+    console.log(error)
+    return{
+      props: {
+        data: []
+      }
+    }
+  }
 }
