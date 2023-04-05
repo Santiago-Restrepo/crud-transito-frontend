@@ -4,11 +4,14 @@ import MaterialReactTable from 'material-react-table';
 import type { MRT_ColumnDef } from 'material-react-table';
 //Components
 import { TableSelector } from '@/components/TableSelector'
+import { TableModal } from '@/components/TableModal'
 //Icons
 import {IoNewspaperSharp} from 'react-icons/io5'
-import {AiFillCar} from 'react-icons/ai'
+import {AiFillCar, AiFillDelete, AiFillEdit} from 'react-icons/ai'
 import {MdBadge} from 'react-icons/md'
 import {FaUser} from 'react-icons/fa'
+//Data
+import tablesInfo from '@/data/tables'
 
 interface HomeProps {
   data: any
@@ -16,36 +19,9 @@ interface HomeProps {
 export default function Home({
   data
 }: HomeProps) {
-  const [tables, setTables] = useState([
-    {
-      name: 'infracciones',
-      path: '/api/infraccion',
-      icon: <IoNewspaperSharp color='#4b5563' size={20}/>,
-      selected: true
-    },
-    {
-      name: 'vehiculos',
-      path: '/api/vehiculo',
-      icon: <AiFillCar color='#4b5563' size={20}/>,
-      selected: false
-    },
-    {
-      name: 'matriculas',
-      path: '/api/matricula',
-      icon: <MdBadge color='#4b5563' size={20}/>,
-      selected: false
-    },
-    {
-      name: 'propietarios',
-      path: '/api/propietario',
-      icon: <FaUser color='#4b5563' size={20}/>,
-      selected: false
-    }
-  ])
-
+  const [tables, setTables] = useState(tablesInfo)
   const [tableData, setTableData] = useState(data);
   const [loading, setLoading] = useState(false);
-
   const columns = useMemo(
     () => {
       const firstRow = tableData[0]
@@ -60,6 +36,11 @@ export default function Home({
     },
     [tableData]
   );
+  const [modal, setModal] = useState({
+    show: false,
+    data: null,
+    columns: null
+  })
 
   const fetchTableData = async (url: string) => {
     const res = await fetch(url)
@@ -80,6 +61,22 @@ export default function Home({
     setLoading(false)
   }
 
+  const handleDelete = async (id: string) => {
+    console.log(id)
+  }
+
+  const handleEdit = async (data: any) => {
+    console.log(data)
+  }
+
+  const handleAdd = async () => {
+    setModal({
+      show: true,
+      data: null,
+      columns: null
+    })
+  }
+
   return (
     <>
       <Head>
@@ -89,7 +86,7 @@ export default function Home({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className='p-5'>
-        <h1 className="text-2xl font-bold text-center text-gray-600">Selecciona una tabla</h1>
+        <h1 className="text-2xl font-bold text-center text-gray-200">Selecciona una tabla</h1>
         <div className="tableButtons flex flex-wrap justify-center">
           {
             tables.map((table, index) => (
@@ -106,17 +103,59 @@ export default function Home({
           }
         </div>
         {
-          loading ? <h1 className="text-xl font-bold text-center text-gray-600">Cargando...</h1> : 
+          loading ? <h1 className="text-xl font-bold text-center text-gray-100">Cargando...</h1> : 
           (
-            <div className="table w-full overflow-x-scroll">
-              <MaterialReactTable
-                columns={columns}
-                data={tableData}
-                muiTableContainerProps={{
-                  sx: { maxHeight: '600px', maxWidth: '90vw' }, //give the table a max height
-                }}
+            <>
+              <div className="table w-full overflow-x-scroll">
+                <MaterialReactTable
+                  columns={columns}
+                  data={tableData}
+                  muiTableContainerProps={{
+                    sx: { maxHeight: '600px', maxWidth: '90vw', background: "#000000" }, //give the table a max height
+                  }}
+                  muiTableProps={{
+                    sx: { background: "#000000" }, //give the table a max height
+                  }}
+                  muiTableBodyProps={{
+                    sx: {
+                      //stripe the rows, make odd rows a darker color
+                      background: "#000000",
+                    },
+                  }}
+                  enableEditing={true}
+                  renderRowActions={({ row, table }) => (
+                    <div className='buttons flex'>
+                      <button
+                        className='mr-2 bg-gray-400 text-white p-2 rounded-md'
+                        onClick={() => handleEdit(row)}
+                      >
+                        <AiFillEdit size={20}/>
+                      </button>
+                      <button
+                        className='bg-red-500 text-white p-2 rounded-md'
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        <AiFillDelete size={20}/>
+                      </button>
+                    </div>
+                  )}
+                  renderTopToolbarCustomActions={() => (
+                    <button
+                      className='bg-green-500 text-white font-medium p-2 rounded-md'
+                      onClick={handleAdd}
+                    >
+                      Crear nuevo
+                    </button>
+                  )}
+                />
+              </div>
+              <TableModal
+                show={modal.show}
+                data={modal.data}
+                columns={modal.columns}
+                onClose={() => setModal({...modal, show: false})}
               />
-            </div>
+            </>
           )
         }
       </main>
