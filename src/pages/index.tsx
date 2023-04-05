@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import MaterialReactTable from 'material-react-table';
 import type { MRT_ColumnDef } from 'material-react-table';
 //Components
@@ -19,27 +19,32 @@ export default function Home({
   const [tables, setTables] = useState([
     {
       name: 'infracciones',
+      path: '/api/infraccion',
       icon: <IoNewspaperSharp color='#4b5563' size={20}/>,
       selected: true
     },
     {
       name: 'vehiculos',
+      path: '/api/vehiculo',
       icon: <AiFillCar color='#4b5563' size={20}/>,
       selected: false
     },
     {
       name: 'matriculas',
+      path: '/api/matricula',
       icon: <MdBadge color='#4b5563' size={20}/>,
       selected: false
     },
     {
       name: 'propietarios',
+      path: '/api/propietario',
       icon: <FaUser color='#4b5563' size={20}/>,
       selected: false
     }
   ])
 
-  const [tableData, setTableData] = useState(data)
+  const [tableData, setTableData] = useState(data);
+  const [loading, setLoading] = useState(false);
 
   const columns = useMemo(
     () => {
@@ -56,7 +61,25 @@ export default function Home({
     [tableData]
   );
 
-  console.log(data)
+  const fetchTableData = async (url: string) => {
+    const res = await fetch(url)
+    const data = await res.json()
+    return data
+  }
+
+  const handleChangeTable = async (index: number) => {
+    if(tables[index].selected) return;
+    setLoading(true)
+    const newTableData = await fetchTableData(`https://crud-transito-backend.vercel.app${tables[index].path}`);
+    setTableData(newTableData)
+    const newTables = tables.map((table, i) => {
+      if(i === index) return {...table, selected: true}
+      return {...table, selected: false}
+    })
+    setTables(newTables)
+    setLoading(false)
+  }
+
   return (
     <>
       <Head>
@@ -69,26 +92,33 @@ export default function Home({
         <h1 className="text-2xl font-bold text-center text-gray-600">Selecciona una tabla</h1>
         <div className="tableButtons flex flex-wrap justify-center">
           {
-            tables.map((table) => (
+            tables.map((table, index) => (
               <TableSelector
                 key={table.name}
                 title={table.name}
                 icon={table.icon}
-                onClick={() => console.log(table.name)} 
+                onClick={() => {
+                  handleChangeTable(index)
+                }} 
                 selected={table.selected}
               />
             ))
           }
         </div>
-        <div className="table w-full overflow-x-scroll">
-          <MaterialReactTable
-            columns={columns}
-            data={tableData}
-            muiTableContainerProps={{
-              sx: { maxHeight: '600px', maxWidth: '90vw' }, //give the table a max height
-            }}
-          />
-        </div>
+        {
+          loading ? <h1 className="text-xl font-bold text-center text-gray-600">Cargando...</h1> : 
+          (
+            <div className="table w-full overflow-x-scroll">
+              <MaterialReactTable
+                columns={columns}
+                data={tableData}
+                muiTableContainerProps={{
+                  sx: { maxHeight: '600px', maxWidth: '90vw' }, //give the table a max height
+                }}
+              />
+            </div>
+          )
+        }
       </main>
     </>
   )

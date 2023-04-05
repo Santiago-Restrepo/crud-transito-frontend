@@ -3,7 +3,7 @@ interface TableSelectorProps {
     title: string
     onClick: () => void
     icon: React.ReactNode,
-    selected?: boolean
+    selected?: boolean,
 }
 
 export const TableSelector = ({
