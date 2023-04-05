@@ -3,8 +3,9 @@ import {IoNewspaperSharp} from 'react-icons/io5'
 import {AiFillCar, AiFillDelete, AiFillEdit} from 'react-icons/ai'
 import {MdBadge} from 'react-icons/md'
 import {FaUser} from 'react-icons/fa'
-
-const tables = [{
+//Types
+import {ModalInput} from '@/types/modalTypes'
+const tables  = [{
     name: 'infracciones',
     path: '/api/infraccion',
     icon: <IoNewspaperSharp color='#ffffff' size={20}/>,

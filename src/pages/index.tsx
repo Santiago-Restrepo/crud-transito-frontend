@@ -12,10 +12,19 @@ import {MdBadge} from 'react-icons/md'
 import {FaUser} from 'react-icons/fa'
 //Data
 import tablesInfo from '@/data/tables'
+//Types
+import {ModalInput} from '@/types/modalTypes'
 
 interface HomeProps {
   data: any
 }
+
+interface ModalStateProps {
+  show: boolean,
+  data: any,
+  tables: any
+}
+  
 export default function Home({
   data
 }: HomeProps) {
@@ -36,10 +45,10 @@ export default function Home({
     },
     [tableData]
   );
-  const [modal, setModal] = useState({
+  const [modal, setModal] = useState<ModalStateProps>({
     show: false,
     data: null,
-    columns: null
+    tables
   })
 
   const fetchTableData = async (url: string) => {
@@ -70,10 +79,11 @@ export default function Home({
   }
 
   const handleAdd = async () => {
+    const selectedTable = tables.find(table => table.selected);
     setModal({
-      show: true,
+      show: true, 
       data: null,
-      columns: null
+      tables
     })
   }
 
@@ -105,59 +115,58 @@ export default function Home({
         {
           loading ? <h1 className="text-xl font-bold text-center text-gray-100">Cargando...</h1> : 
           (
-            <>
-              <div className="table w-full overflow-x-scroll">
-                <MaterialReactTable
-                  columns={columns}
-                  data={tableData}
-                  muiTableContainerProps={{
-                    sx: { maxHeight: '600px', maxWidth: '90vw', background: "#000000" }, //give the table a max height
-                  }}
-                  muiTableProps={{
-                    sx: { background: "#000000" }, //give the table a max height
-                  }}
-                  muiTableBodyProps={{
-                    sx: {
-                      //stripe the rows, make odd rows a darker color
-                      background: "#000000",
-                    },
-                  }}
-                  enableEditing={true}
-                  renderRowActions={({ row, table }) => (
-                    <div className='buttons flex'>
-                      <button
-                        className='mr-2 bg-gray-400 text-white p-2 rounded-md'
-                        onClick={() => handleEdit(row)}
-                      >
-                        <AiFillEdit size={20}/>
-                      </button>
-                      <button
-                        className='bg-red-500 text-white p-2 rounded-md'
-                        onClick={() => handleDelete(row.id)}
-                      >
-                        <AiFillDelete size={20}/>
-                      </button>
-                    </div>
-                  )}
-                  renderTopToolbarCustomActions={() => (
+            <div className="table w-full overflow-x-scroll">
+              <MaterialReactTable
+                columns={columns}
+                data={tableData}
+                muiTableContainerProps={{
+                  sx: { maxHeight: '600px', maxWidth: '90vw', background: "#000000" }, //give the table a max height
+                }}
+                muiTableProps={{
+                  sx: { background: "#000000" }, //give the table a max height
+                }}
+                muiTableBodyProps={{
+                  sx: {
+                    //stripe the rows, make odd rows a darker color
+                    background: "#000000",
+                  },
+                }}
+                enableEditing={true}
+                renderRowActions={({ row, table }) => (
+                  <div className='buttons flex'>
                     <button
-                      className='bg-green-500 text-white font-medium p-2 rounded-md'
-                      onClick={handleAdd}
+                      className='mr-2 bg-gray-400 text-white p-2 rounded-md'
+                      onClick={() => handleEdit(row)}
                     >
-                      Crear nuevo
+                      <AiFillEdit size={20}/>
                     </button>
-                  )}
-                />
-              </div>
-              <TableModal
-                show={modal.show}
-                data={modal.data}
-                columns={modal.columns}
-                onClose={() => setModal({...modal, show: false})}
+                    <button
+                      className='bg-red-500 text-white p-2 rounded-md'
+                      onClick={() => handleDelete(row.id)}
+                    >
+                      <AiFillDelete size={20}/>
+                    </button>
+                  </div>
+                )}
+                renderTopToolbarCustomActions={() => (
+                  <button
+                    className='bg-green-500 text-white font-medium p-2 rounded-md'
+                    onClick={handleAdd}
+                  >
+                    Crear nuevo
+                  </button>
+                )}
               />
-            </>
+            </div>
           )
         }
+        <TableModal
+          show={modal.show}
+          data={modal.data}
+          tables={modal.tables}
+          setTables={setTables}
+          onClose={() => setModal({...modal, show: false})}
+        />
       </main>
     </>
   )
