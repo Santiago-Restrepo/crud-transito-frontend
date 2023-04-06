@@ -1,11 +1,16 @@
-import React, {useState, useEffect,useMemo} from 'react'
+import React, {useState, useEffect} from 'react'
 import {AiFillCloseSquare} from 'react-icons/ai'
 //Types
 import {ModalInput} from '@/types/modalTypes'
-
+import { schemas } from '@/schemas'
+//UseForm and Yup
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useForm } from 'react-hook-form';
+//Types
+import { Table, Input } from '@/types/tableTypes'
 interface TableModalProps {
     data?: any,
-    selectedTable: any,
+    selectedTable: Table,
     setTables: (tables: any) => void,
     show: boolean,
     onClose: () => void,
@@ -18,12 +23,16 @@ export const TableModal = ({
     show,
     onClose,
 }: TableModalProps) => {
-    const [inputs, setInputs] = useState([...selectedTable.inputs.map((input: ModalInput) => {
+    const [inputs, setInputs] = useState([...selectedTable.inputs.map((input) => {
         return {
             ...input,
             value: data ? data[input.name] : ''
         }
     })]);
+    // const selectedSchema = schemas[selectedTable.name] || schemas.default;
+    // const { register, handleSubmit, formState: { errors } } = useForm({
+    //     resolver: yupResolver(schemas[selectedTable.name]),
+    // });
 
     const fetchData = async (url: string) => {
         const res = await fetch(url)
@@ -31,7 +40,7 @@ export const TableModal = ({
         return data
     }
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>, index: number) => {
-        const newInputs = inputs.map((input: ModalInput, i: number) => {
+        const newInputs = inputs.map((input, i: number) => {
             if(i === index) {
                 return {
                     ...input,
@@ -42,7 +51,7 @@ export const TableModal = ({
         })
         setInputs(newInputs)
     }
-    const fetchDataInputs = async (dataInputs: ModalInput[]) => {
+    const fetchDataInputs = async (dataInputs: Input[]) => {
         if(dataInputs.length > 0) {
                 const dataPromises = dataInputs.map((input: ModalInput) => {
                     return fetchData(`https://crud-transito-backend.vercel.app${input.data?.path}`)
@@ -80,9 +89,10 @@ export const TableModal = ({
                 })
             }
     }
+    const onsubmit = ()=>{}
     useEffect(() => {
         const selectedTableInputs = selectedTable.inputs;
-        const dataInputs = selectedTableInputs.filter((input: ModalInput) => input.data && input.data.path);
+        const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
         fetchDataInputs(dataInputs)
         setInputs(selectedTableInputs)
     }, [selectedTable])
@@ -90,7 +100,7 @@ export const TableModal = ({
         <div className={`fixed z-10 inset-0 overflow-y-auto ${show ? 'flex' : 'hidden'} justify-center items-center bg-gray-900 bg-opacity-80`}>
             <div className="relative flex flex-col items-center justify-center w-11/12 max-h-screen p-4 text-center bg-slate-800 rounded-xl">
                 {
-                    inputs.map((input: ModalInput, index: number) => {
+                    inputs.map((input, index: number) => {
                         return (
                             <div key={index} className="flex flex-col items-start justify-center w-full">
                                 <label 
@@ -135,6 +145,13 @@ export const TableModal = ({
                     onClick={onClose}
                 >
                     <AiFillCloseSquare size={20} fillOpacity={1} fill='#ffffff'/>
+                </button>
+
+                <button
+                    className=''    
+                    onClick={onsubmit}
+                >
+                    Enviar
                 </button>
             </div>
         </div>
