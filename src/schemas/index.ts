@@ -1,3 +1,4 @@
+import { TableNames } from '@/types/tableTypes';
 import * as yup from 'yup';
 const infraccionSchema = yup.object().shape({
     fecha_infraccion: yup.date().required(),
@@ -23,8 +24,8 @@ const propietarioSchema = yup.object().shape({
 });
 
 export const schemas = {
-    infraccion: infraccionSchema,
-    vehiculo: vehiculoSchema,
-    matricula: matriculaSchema,
-    propietario: propietarioSchema
+    [TableNames.infracciones]: infraccionSchema,
+    [TableNames.vehiculos]: vehiculoSchema,
+    [TableNames.matriculas]: matriculaSchema,
+    [TableNames.propietarios]: propietarioSchema
 };

@@ -16,23 +16,23 @@ interface TableModalProps {
     onClose: () => void,
 }
 
-
 export const TableModal = ({
     data,
     selectedTable,
     show,
     onClose,
 }: TableModalProps) => {
+    
     const [inputs, setInputs] = useState([...selectedTable.inputs.map((input) => {
+        console.log(data[input.name])
         return {
             ...input,
             value: data ? data[input.name] : ''
         }
     })]);
-    // const selectedSchema = schemas[selectedTable.name] || schemas.default;
-    // const { register, handleSubmit, formState: { errors } } = useForm({
-    //     resolver: yupResolver(schemas[selectedTable.name]),
-    // });
+    const { register, handleSubmit, formState: { errors }, reset } = useForm({
+        resolver: yupResolver(schemas[selectedTable.name]),
+    });
 
     const fetchData = async (url: string) => {
         const res = await fetch(url)
@@ -42,6 +42,7 @@ export const TableModal = ({
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>, index: number) => {
         const newInputs = inputs.map((input, i: number) => {
             if(i === index) {
+                register(input.name, { value: e.target.value })
                 return {
                     ...input,
                     value: e.target.value
@@ -53,12 +54,12 @@ export const TableModal = ({
     }
     const fetchDataInputs = async (dataInputs: Input[]) => {
         if(dataInputs.length > 0) {
-                const dataPromises = dataInputs.map((input: ModalInput) => {
+                const dataPromises = dataInputs.map((input) => {
                     return fetchData(`https://crud-transito-backend.vercel.app${input.data?.path}`)
                 })
                 Promise.all(dataPromises).then((data) => {
                     if(data.length > 0) {
-                        const newDataInputs = dataInputs.map((input: ModalInput, index: number) => {
+                        const newDataInputs = dataInputs.map((input, index: number) => {
                             return {
                                 ...input,
                                 options: [
@@ -77,8 +78,8 @@ export const TableModal = ({
                                 ]
                             }
                         })
-                        const newInputs = selectedTable.inputs.map((input: ModalInput) => {
-                            const newDataInput = newDataInputs.find((newDataInput: ModalInput) => newDataInput.name === input.name)
+                        const newInputs = selectedTable.inputs.map((input) => {
+                            const newDataInput = newDataInputs.find((newDataInput) => newDataInput.name === input.name)
                             if(newDataInput) {
                                 return newDataInput
                             }
@@ -89,8 +90,11 @@ export const TableModal = ({
                 })
             }
     }
-    const onsubmit = ()=>{}
+    const onsubmit = (data: any) => {
+        console.log(data)
+    }
     useEffect(() => {
+        reset()
         const selectedTableInputs = selectedTable.inputs;
         const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
         fetchDataInputs(dataInputs)
@@ -99,60 +103,69 @@ export const TableModal = ({
     return (
         <div className={`fixed z-10 inset-0 overflow-y-auto ${show ? 'flex' : 'hidden'} justify-center items-center bg-gray-900 bg-opacity-80`}>
             <div className="relative flex flex-col items-center justify-center w-11/12 max-h-screen p-4 text-center bg-slate-800 rounded-xl">
-                {
-                    inputs.map((input, index: number) => {
-                        return (
-                            <div key={index} className="flex flex-col items-start justify-center w-full">
-                                <label 
-                                    className="mb-2 text-left text-md font-semibold text-gray-300 "
-                                    htmlFor={input.name}
-                                >
-                                    {input.name}
-                                </label>
-                                {
-                                    input.type === 'select' ? (
-                                        <select
-                                        className="w-full p-2 rounded-md bg-slate-200"
-                                        name={input.name}
-                                        value={input.value}
-                                        onChange={(e) => handleInputChange(e, index)}
-                                        >
-                                            {
-                                                input.options?.map((option, index) => {
-                                                    return (
-                                                        <option key={index} value={option.value}>{option.label}</option>
-                                                    )
-                                                })
-                                            }
-                                        </select>
-                                    ) : 
-                                    (
-                                        <input
+                <h1 className="text-2xl font-bold text-white">{selectedTable.name}</h1>
+                <form onSubmit={handleSubmit(onsubmit)} className="w-full" id="form">
+                    {
+                        inputs.map((input, index: number) => {
+                            return (
+                                <div key={index} className="flex flex-col items-start justify-center w-full">
+                                    <label 
+                                        className="mb-2 text-left text-md font-semibold text-gray-300 "
+                                        htmlFor={input.name}
+                                    >
+                                        {input.label}
+                                    </label>
+                                    {
+                                        input.type === 'select' ? (
+                                            <select
                                             className="w-full p-2 rounded-md bg-slate-200"
-                                            type={input.type}
-                                            name={input.name}
                                             value={input.value}
-                                            onChange={(e) =>  handleInputChange(e, index)}
-                                        />
-                                    )
-                                }
-                            </div>
-                        )
-                    })
-                }
-                <button
-                    className='absolute top-0 right-0 bg-slate-900 text-white p-2 rounded-md'
-                    onClick={onClose}
-                >
-                    <AiFillCloseSquare size={20} fillOpacity={1} fill='#ffffff'/>
-                </button>
+                                            {...register(input.name)}
+                                            onChange={(e) => handleInputChange(e, index)}
+                                            >
+                                                {
+                                                    input.options?.map((option, index) => {
+                                                        return (
+                                                            <option key={index} value={option.value}>{option.label}</option>
+                                                        )
+                                                    })
+                                                }
+                                            </select>
+                                        ) : 
+                                        (
+                                            <input
+                                                className="w-full p-2 rounded-md bg-slate-200"
+                                                type={input.type}
+                                                value={input.value}
+                                                {...register(input.name)}
+                                                onChange={(e) =>  handleInputChange(e, index)}
+                                            />
+                                        )
+                                    }
+                                    {
+                                        errors[input.name] && (
+                                            <span className="text-red-500 text-sm">{errors[input.name]?.message as String}</span>
+                                        )
+                                    }
+                                </div>
+                            )
+                        })
+                    }
+                    <button
+                        className='absolute top-3 right-3 bg-slate-900 text-white p-2 rounded-md'
+                        onClick={onClose}
+                        type='button'
+                    >
+                        <AiFillCloseSquare size={20} fillOpacity={1} fill='#ffffff'/>
+                    </button>
 
-                <button
-                    className=''    
-                    onClick={onsubmit}
-                >
-                    Enviar
-                </button>
+                    <button
+                        className='mt-4 bg-slate-600 font-bold text-white p-2 rounded-md' 
+                        type='submit'
+                    >
+                        Enviar
+                    </button>
+                </form>
             </div>
         </div>
     )

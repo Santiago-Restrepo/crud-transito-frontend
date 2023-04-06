@@ -74,8 +74,12 @@ export default function Home({
     console.log(id)
   }
 
-  const handleEdit = async (data: any) => {
-    console.log(data)
+  const handleEdit = async (row: any) => {
+    const data = row.original;
+    setModal({
+      show: true,
+      data
+    })
   }
 
   const handleAdd = async () => {
