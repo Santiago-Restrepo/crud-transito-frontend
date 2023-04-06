@@ -21,14 +21,14 @@ interface HomeProps {
 
 interface ModalStateProps {
   show: boolean,
-  data: any,
-  tables: any
+  data: any
 }
   
 export default function Home({
   data
 }: HomeProps) {
-  const [tables, setTables] = useState(tablesInfo)
+  const [tables, setTables] = useState([...tablesInfo]);
+  const [selectedTable, setSelectedTable] = useState(tables[0]);
   const [tableData, setTableData] = useState(data);
   const [loading, setLoading] = useState(false);
   const columns = useMemo(
@@ -47,8 +47,7 @@ export default function Home({
   );
   const [modal, setModal] = useState<ModalStateProps>({
     show: false,
-    data: null,
-    tables
+    data: null
   })
 
   const fetchTableData = async (url: string) => {
@@ -67,6 +66,7 @@ export default function Home({
       return {...table, selected: false}
     })
     setTables(newTables)
+    setSelectedTable(tables[index])
     setLoading(false)
   }
 
@@ -79,11 +79,9 @@ export default function Home({
   }
 
   const handleAdd = async () => {
-    const selectedTable = tables.find(table => table.selected);
     setModal({
       show: true, 
-      data: null,
-      tables
+      data: null
     })
   }
 
@@ -163,7 +161,7 @@ export default function Home({
         <TableModal
           show={modal.show}
           data={modal.data}
-          tables={modal.tables}
+          selectedTable={selectedTable}
           setTables={setTables}
           onClose={() => setModal({...modal, show: false})}
         />

@@ -1,5 +1,6 @@
 export interface ModalInput {
     name: string,
+    value: string,
     type: string,
     required: boolean,
     data?: {
@@ -7,7 +8,7 @@ export interface ModalInput {
         label: string,
         value: string
     },
-    options?: {
+    options: {
         label: string,
         value: string
     }[]

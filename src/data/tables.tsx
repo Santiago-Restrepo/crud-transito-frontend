@@ -13,26 +13,41 @@ const tables  = [{
     inputs: [
       {
         name: 'fecha_infraccion',
+        value: new Date().toISOString().split('T')[0],
         type: 'date',
         required: true
       },
       {
         name: 'accionada_por',
-        type: 'string',
+        type: 'select',
+        value: 'agente de tránsito',
+        options: [
+          {
+            label: 'agente de tránsito',
+            value: 'agente de tránsito'
+          },
+          {
+            label: 'cámara de detecciones',
+            value: 'cámara de detecciones'
+          }
+        ],
         required: true
       },
       {
         name: 'descripcion',
+        value: '',
         type: 'string',
         required: true
       },
       {
         name: 'valor',
+        value: 0,
         type: 'number',
         required: true
       },
       {
         name: 'vehiculo_id ',
+        value: '',
         type: 'select',
         required: true,
         data: {
@@ -40,7 +55,10 @@ const tables  = [{
           label: 'id',
           value: 'id'
         },
-        options: []
+        options: [{
+          label: 'Seleccione una opción',
+          value: ''
+        }]
       }
     ]
   },
@@ -52,6 +70,7 @@ const tables  = [{
     inputs: [
       {
         name: 'tipo',
+        value: 'automovil',
         type: 'select',
         required: true,
         options: [
@@ -71,14 +90,20 @@ const tables  = [{
       },
       {
         name: 'matricula_id',
+        value: '',
         type: 'select',
         required: true,
         data: {
           path: '/api/matricula',
           label: 'id',
-          value: 'numero'
+          value: 'placa'
         },
-        options: []
+        options: [
+          {
+            label: 'Seleccione una opción',
+            value: ''
+          }
+        ]
       }
     ]
   },
@@ -90,21 +115,25 @@ const tables  = [{
     inputs: [
       {
         name: "placa",
+        value: '',
         type: "string",
         required: true
       },
       {
         name: "marca",
+        value: '',
         type: "string",
         required: true
       },
       {
         name: "fecha_matricula",
+        value: new Date().toISOString().split('T')[0],
         type: "date",
         required: true
       },
       {
         name: "propietario_id",
+        value: '',
         type: "select",
         required: true,
         data: {
@@ -112,7 +141,10 @@ const tables  = [{
           label: 'id',
           value: 'id'
         },
-        options: []
+        options: [{
+          label: 'Seleccione una opción',
+          value: ''
+        }]
       }
     ]
 
@@ -125,16 +157,19 @@ const tables  = [{
     inputs: [
       {
         name: "nombre",
+        value: '',
         type: "string",
         required: true
       },
       {
         name: "direccion",
+        value: '',
         type: "string",
         required: true
       },
       {
         name: "tipo",
+        value: 'persona',
         type: "select",
         required: true,
         options: [
