@@ -23,16 +23,15 @@ export const TableModal = ({
     onClose,
 }: TableModalProps) => {
     
+    const { register, handleSubmit, formState: { errors }, reset } = useForm({
+        resolver: yupResolver(schemas[selectedTable.name]),
+    });
     const [inputs, setInputs] = useState([...selectedTable.inputs.map((input) => {
-        console.log(data[input.name])
         return {
             ...input,
             value: data ? data[input.name] : ''
         }
     })]);
-    const { register, handleSubmit, formState: { errors }, reset } = useForm({
-        resolver: yupResolver(schemas[selectedTable.name]),
-    });
 
     const fetchData = async (url: string) => {
         const res = await fetch(url)
@@ -55,6 +54,9 @@ export const TableModal = ({
     const fetchDataInputs = async (dataInputs: Input[]) => {
         if(dataInputs.length > 0) {
                 const dataPromises = dataInputs.map((input) => {
+                    if(input.options && input.options.length > 1){
+                        return null;
+                    }
                     return fetchData(`https://crud-transito-backend.vercel.app${input.data?.path}`)
                 })
                 Promise.all(dataPromises).then((data) => {
@@ -94,12 +96,54 @@ export const TableModal = ({
         console.log(data)
     }
     useEffect(() => {
-        reset()
         const selectedTableInputs = selectedTable.inputs;
         const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
         fetchDataInputs(dataInputs)
-        setInputs(selectedTableInputs)
+        setInputs(selectedTableInputs.map((input) => {
+            return {
+                ...input,
+                value: data ? data[input.name] : ''
+            }
+        }))
+        console.log("selectedTable", selectedTable)
+        return () => {
+            reset();
+        }
     }, [selectedTable])
+    useEffect(() => {
+        if(data) {
+            reset();
+            const selectedTableInputs = selectedTable.inputs.map((input) => {
+                let value = data ? data[input.name] : ''
+                if(input.type === 'date' && value) {
+                    value = new Date(value).toISOString().split('T')[0]
+                }
+                return {
+                    ...input,
+                    value
+                }
+            });
+            const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
+            // fetchDataInputs(dataInputs)
+            setInputs(selectedTableInputs)
+        }else{
+            reset();
+            setInputs(selectedTable.inputs.map((input) => {
+                let value = data ? data[input.name] : ''
+                if(input.type === 'date' && value) {
+                    value = new Date(value).toISOString().split('T')[0]
+                }
+                return {
+                    ...input,
+                    value
+                }
+            }))
+        }
+        return () => {
+            reset();
+        }
+
+    }, [data])
     return (
         <div className={`fixed z-10 inset-0 overflow-y-auto ${show ? 'flex' : 'hidden'} justify-center items-center bg-gray-900 bg-opacity-80`}>
             <div className="relative flex flex-col items-center justify-center w-11/12 max-h-screen p-4 text-center bg-slate-800 rounded-xl">
