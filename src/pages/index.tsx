@@ -6,14 +6,15 @@ import type { MRT_ColumnDef } from 'material-react-table';
 import { TableSelector } from '@/components/TableSelector'
 import { TableModal } from '@/components/TableModal'
 //Icons
-import {IoNewspaperSharp} from 'react-icons/io5'
-import {AiFillCar, AiFillDelete, AiFillEdit} from 'react-icons/ai'
-import {MdBadge} from 'react-icons/md'
-import {FaUser} from 'react-icons/fa'
+import {AiFillDelete, AiFillEdit, AiOutlineLoading3Quarters} from 'react-icons/ai'
+//Toast
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 //Data
 import tablesInfo from '@/data/tables'
+import { error } from 'console';
 //Types
-import {ModalInput} from '@/types/modalTypes'
+
 
 interface HomeProps {
   data: any
@@ -56,6 +57,13 @@ export default function Home({
     return data
   }
 
+  const refetchTableData = async () => {
+    setLoading(true)
+    const newTableData = await fetchTableData(`https://crud-transito-backend.vercel.app${selectedTable.path}`);
+    setTableData(newTableData)
+    setLoading(false)
+  }
+
   const handleChangeTable = async (index: number) => {
     if(tables[index].selected) return;
     setLoading(true)
@@ -68,10 +76,6 @@ export default function Home({
     setTables(newTables)
     setSelectedTable(tables[index])
     setLoading(false)
-  }
-
-  const handleDelete = async (id: string) => {
-    console.log(id)
   }
 
   const handleEdit = async (row: any) => {
@@ -87,6 +91,18 @@ export default function Home({
       show: true, 
       data: null
     })
+  }
+
+  const handleDelete = async (id: number) => {
+    const res = await fetch(`https://crud-transito-backend.vercel.app${selectedTable.path}/${id}`, {
+      method: 'DELETE',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+    })
+    const data = await res.json()
+    if(data.error) throw new Error(data.message)
+    await refetchTableData()
   }
 
   return (
@@ -122,34 +138,50 @@ export default function Home({
                 columns={columns}
                 data={tableData}
                 muiTableContainerProps={{
-                  sx: { maxHeight: '600px', maxWidth: '90vw', background: "#000000" }, //give the table a max height
-                }}
-                muiTableProps={{
-                  sx: { background: "#000000" }, //give the table a max height
-                }}
-                muiTableBodyProps={{
-                  sx: {
-                    //stripe the rows, make odd rows a darker color
-                    background: "#000000",
-                  },
+                  sx: { maxHeight: '600px', maxWidth: '90vw' }, //give the table a max height
                 }}
                 enableEditing={true}
-                renderRowActions={({ row, table }) => (
-                  <div className='buttons flex'>
-                    <button
-                      className='mr-2 bg-gray-400 text-white p-2 rounded-md'
-                      onClick={() => handleEdit(row)}
-                    >
-                      <AiFillEdit size={20}/>
-                    </button>
-                    <button
-                      className='bg-red-500 text-white p-2 rounded-md'
-                      onClick={() => handleDelete(row.id)}
-                    >
-                      <AiFillDelete size={20}/>
-                    </button>
-                  </div>
-                )}
+                renderRowActions={({ row, table }) => {
+                  const id : number = row.getValue('id')
+                  return (
+                    <div className='buttons flex'>
+                      <button
+                        className='mr-2 bg-gray-400 text-white p-2 rounded-md'
+                        onClick={() => handleEdit(row)}
+                      >
+                        <AiFillEdit size={20}/>
+                      </button>
+                      <button
+                        className='bg-red-500 text-white p-2 rounded-md'
+                        onClick={async () => {
+                          if(id){
+                            toast.promise(
+                              handleDelete(id),
+                              {
+                                pending: {
+                                  render(){
+                                    return "Cargando..."
+                                  },
+                                  icon: false,
+                                },
+                                success: 'Registro eliminado correctamente',
+                                error: {
+                                  render({data}){
+                                    // When the promise reject, data will contains the error
+                                    const message = data instanceof Error ? data.message : "Error"
+                                    return message
+                                  }
+                                }
+                              }
+                            )
+                          }
+                        }}
+                      >
+                        <AiFillDelete size={20}/>
+                      </button>
+                    </div>
+                  )
+                }}
                 renderTopToolbarCustomActions={() => (
                   <button
                     className='bg-green-500 text-white font-medium p-2 rounded-md'
@@ -165,10 +197,13 @@ export default function Home({
         <TableModal
           show={modal.show}
           data={modal.data}
+          toast={toast}
           selectedTable={selectedTable}
           setTables={setTables}
+          refetchTableData={refetchTableData}
           onClose={() => setModal({...modal, show: false})}
         />
+        <ToastContainer />
       </main>
     </>
   )
