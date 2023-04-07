@@ -51,12 +51,16 @@ export const TableModal = ({
         })
         setInputs(newInputs)
     }
-    const fetchDataInputs = async (dataInputs: Input[]) => {
+    const fetchDataInputs = async (completeInputs: Input[], dataInputs: Input[]) => {
+        console.log(completeInputs)
         if(dataInputs.length > 0) {
+                dataInputs.forEach((input) => {
+                    // console.log(input.options)
+                    // if(input.options && input.options.length > 1){
+                    //     return null;
+                    // }
+                })
                 const dataPromises = dataInputs.map((input) => {
-                    if(input.options && input.options.length > 1){
-                        return null;
-                    }
                     return fetchData(`https://crud-transito-backend.vercel.app${input.data?.path}`)
                 })
                 Promise.all(dataPromises).then((data) => {
@@ -80,7 +84,7 @@ export const TableModal = ({
                                 ]
                             }
                         })
-                        const newInputs = selectedTable.inputs.map((input) => {
+                        const newInputs = completeInputs.map((input) => {
                             const newDataInput = newDataInputs.find((newDataInput) => newDataInput.name === input.name)
                             if(newDataInput) {
                                 return newDataInput
@@ -98,14 +102,13 @@ export const TableModal = ({
     useEffect(() => {
         const selectedTableInputs = selectedTable.inputs;
         const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
-        fetchDataInputs(dataInputs)
-        setInputs(selectedTableInputs.map((input) => {
-            return {
-                ...input,
-                value: data ? data[input.name] : ''
-            }
-        }))
-        console.log("selectedTable", selectedTable)
+        fetchDataInputs(selectedTableInputs, dataInputs)
+        // setInputs(selectedTableInputs.map((input) => {
+        //     return {
+        //         ...input,
+        //         value: data ? data[input.name] : ''
+        //     }
+        // }))
         return () => {
             reset();
         }
@@ -124,11 +127,11 @@ export const TableModal = ({
                 }
             });
             const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
-            // fetchDataInputs(dataInputs)
-            setInputs(selectedTableInputs)
+            fetchDataInputs(selectedTableInputs, dataInputs)
+            // setInputs(selectedTableInputs)
         }else{
             reset();
-            setInputs(selectedTable.inputs.map((input) => {
+            const selectedTableInputs = selectedTable.inputs.map((input) => {
                 let value = data ? data[input.name] : ''
                 if(input.type === 'date' && value) {
                     value = new Date(value).toISOString().split('T')[0]
@@ -137,7 +140,9 @@ export const TableModal = ({
                     ...input,
                     value
                 }
-            }))
+            });
+            const dataInputs = selectedTableInputs.filter((input) => input.data && input.data.path);
+            fetchDataInputs(selectedTableInputs, dataInputs)
         }
         return () => {
             reset();
